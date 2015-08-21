@@ -1,15 +1,12 @@
 package example.com.exsqlite;
 
-/**
- * Created by Mohammad on 6/4/2015.
- */
 public class WeatherDetail {
     private int id;
     private String main;
     private String description;
     private String icon;
-    private int tempMin;
-    private int tempMax;
+    private float tempMin;
+    private float tempMax;
     private String  day;
 
     public int getId() {
@@ -44,19 +41,19 @@ public class WeatherDetail {
         this.icon = icon;
     }
 
-    public int getTempMin() {
+    public float getTempMin() {
         return tempMin;
     }
 
-    public void setTempMin(int tempMin) {
+    public void setTempMin(float tempMin) {
         this.tempMin = tempMin;
     }
 
-    public int getTempMax() {
+    public float getTempMax() {
         return tempMax;
     }
 
-    public void setTempMax(int tempMax) {
+    public void setTempMax(float tempMax) {
         this.tempMax = tempMax;
     }
 
@@ -70,6 +67,6 @@ public class WeatherDetail {
 
     @Override
     public String toString(){
-        return day + "    " + tempMin + "-" + tempMax + " ["+main+"]";
+        return day + "    " + String.format("%.1f", tempMin) + "-" + String.format("%.1f", tempMax) + " ["+main+"]";
     }
 }

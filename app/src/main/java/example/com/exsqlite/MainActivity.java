@@ -1,5 +1,4 @@
 package example.com.exsqlite;
-
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
@@ -11,7 +10,6 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.internal.widget.DialogTitle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,9 +17,7 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import org.json.JSONException;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,26 +26,25 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
-
 
 public class MainActivity extends ActionBarActivity {
-    ProgressBar progress;
-    ArrayList<Weather> weatherList = new ArrayList<>();
-    ArrayList<WeatherDetail> weatherDetailList = new ArrayList<>();
+    private ProgressBar progress;
+    private ArrayList<Weather> weatherList = new ArrayList<>();
+    private ArrayList<WeatherDetail> weatherDetailList = new ArrayList<>();
     private String city="";
     private String country="";
-    private double latitude=34.0672280;
-    private double longitude=-118.1667410;
-    LocationManager locationManager;
-    LocationListener locationListener;
+    private static double latitude=56.479261;
+    private static double longitude=-115.006348;
+
+    private LocationManager locationManager;
+    private LocationListener locationListener;
     private static TextView textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        getLocation();
         progress = (ProgressBar) findViewById(R.id.progressBar);
         textView = (TextView) findViewById(R.id.textView);
         if (isOnline()) {
@@ -59,7 +54,6 @@ public class MainActivity extends ActionBarActivity {
             progress.setVisibility(View.GONE);
             Toast.makeText(this, "Not online", Toast.LENGTH_LONG).show();
         }
-        getLocation();
     }
 
     public ProgressBar getProgress() {
@@ -114,10 +108,9 @@ public class MainActivity extends ActionBarActivity {
     public void showList() {
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
-        ft.add(R.id.container, new FlickerFragment());
+        ft.add(R.id.container, new WeatherFragment());
         ft.commit();
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -153,15 +146,20 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         protected Long doInBackground(String... strings) {
-            String dataString = "http://api.openweathermap.org/data/2.5/forecast/daily?lat="+latitude+"&lon="+longitude+"&cnt=10&mode=json";
-            Log.i(Constants.TAG, dataString);
+            //url = http://api.openweathermap.org/data/2.5/forecast/daily?lat=56.479261&lon=-115.006348&cnt=10&mode=json&units=imperial
+            String urlString = "http://api.openweathermap.org/data/2.5/forecast/daily?" +
+                    "lat="+latitude+
+                    "&lon="+longitude+
+                    "&cnt=10&mode=json&units=imperial";
+
+            Log.i("URL", urlString);
             try {
-                URL dataUrl = new URL(dataString);
+                URL dataUrl = new URL(urlString);
                 connection = (HttpURLConnection) dataUrl.openConnection();
                 connection.connect();
                 int status = connection.getResponseCode();
                 Log.d("TAG", "status " + status);
-                //if it is successful
+
                 if (status == 200) {
                     InputStream is = connection.getInputStream();
                     BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -170,16 +168,13 @@ public class MainActivity extends ActionBarActivity {
 
                     while ((responseString = reader.readLine()) != null) {
                         sb = sb.append(responseString);
+                        Log.i("responseString value= " , responseString);
                     }
 
                     String url = sb.toString();
-
                     city = Weather.getCityName(url);
                     country = Weather.getCountryName(url);
-
                     weatherDetailList = Weather.getForcastList(url);
-
-                    Log.d(Constants.TAG, url);
 
                     return 0l;
                 } else {
@@ -200,23 +195,21 @@ public class MainActivity extends ActionBarActivity {
                 if (connection != null)
                     connection.disconnect();
             }
-
-
-
         }
 
         @Override
         protected void onPostExecute(Long result) {
             if (result != 1l) {
-                textView.setText("City: "+Weather.city+" Country: "+Weather.country);
+                textView.setText(Weather.city+", "+Weather.country);
                 setWeatherList(weatherList);
                 showList();
 
             } else {
-                Toast.makeText(getApplicationContext(), "AsyncTask didn't complete", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(),
+                        "AsyncTask didn't complete",
+                        Toast.LENGTH_LONG).show();
             }
             progress.setVisibility(View.GONE);
-
         }
     }
 
@@ -225,17 +218,14 @@ public class MainActivity extends ActionBarActivity {
         boolean isGPRProvider=locationManager.isProviderEnabled(locationManager.GPS_PROVIDER);
         boolean isNetworkProvider=locationManager.isProviderEnabled(locationManager.NETWORK_PROVIDER);
 
-
+        Log.i("Location", "getLocation called");
         locationListener = new LocationListener() {
-
 
             @Override
             public void onLocationChanged(Location location) {
                 latitude = location.getLatitude();
                 longitude = location.getLongitude();
             }
-
-
 
             @Override
             public void onStatusChanged(String s, int i, Bundle bundle) {}
@@ -247,14 +237,16 @@ public class MainActivity extends ActionBarActivity {
             public void onProviderDisabled(String s) {}
         };
 
-
-        if(latitude==-1&&longitude==-1)
-        {
             Location location=null;
             if(isNetworkProvider)
-                location=locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            if(isGPRProvider)
-                location=locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            {
+                Log.i("location Provider: ", "NETWORK_PROVIDER");
+                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            }
+            if(isGPRProvider) {
+                Log.i("location Provider: ", "GPS_PROVIDER");
+                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            }
             if(location!=null)
             {
                 Log.d("location latitude",+location.getLatitude()+"");
@@ -263,11 +255,7 @@ public class MainActivity extends ActionBarActivity {
                 longitude=location.getLongitude();
             }
 
-        }
-
+        Log.i("My Location", latitude + " : " + longitude);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
-
     }
-
-
 }

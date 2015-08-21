@@ -12,7 +12,10 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Large Text"
         android:id="@+id/textView"
-        android:layout_weight="0.36" />
+        android:layout_weight="0.36"
+        style="@style/Base.TextAppearance.AppCompat.Display1"
+        android:background="@color/secondary_text_default_material_light"
+        android:textSize="35dp" />
 
     <ProgressBar
         android:id="@+id/progressBar"
